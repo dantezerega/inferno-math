@@ -24,7 +24,7 @@ the timer runs out, track your progress, and build a daily practice habit.
   toggle and volume control.
 - **Theming** — light / dark / system with smooth transitions, no flash on load.
 - **Persistence** — settings and statistics saved to `localStorage`.
-- **Accounts & cloud sync (optional)** — sign in with an email one-time code to sync stats
+- **Accounts & cloud sync (optional)** — sign in with an email confirmation link to sync stats
   across devices, persist daily streaks, XP/levels, and achievements via
   Supabase. Fully optional: with no credentials the app runs local-only and
   unchanged. See [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md).

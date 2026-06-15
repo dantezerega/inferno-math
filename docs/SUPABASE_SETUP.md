@@ -47,28 +47,30 @@ Open **SQL Editor** in the Supabase dashboard, paste the full contents of
 
 The script is idempotent — safe to re-run.
 
-## 4. Enable email (one-time code) auth
+## 4. Enable email (magic link) auth
 
-Email auth is enabled by default — no OAuth provider or redirect URIs needed.
+Email auth is enabled by default — no OAuth provider needed. The app sends a
+**confirmation link**; clicking it returns the user to the app and signs them
+in (no code to type).
 
 1. In Supabase: **Authentication → Providers → Email** → ensure it's enabled.
-   "Confirm email" can stay on; OTP works regardless.
-2. Make the email deliver a **code** rather than just a magic link. Go to
-   **Authentication → Email Templates → Magic Link** and ensure the template
-   includes the token, e.g.:
+2. **Authentication → Email Templates → Magic Link** must contain the link, e.g.
+   the default:
 
    ```html
-   <p>Your login code is: <strong>{{ .Token }}</strong></p>
+   <p><a href="{{ .ConfirmationURL }}">Confirm and sign in</a></p>
    ```
 
-   `{{ .Token }}` is the 6-digit code the app's "Enter code" field expects.
-   (A magic-link `{{ .ConfirmationURL }}` can remain too, but the app uses the
-   code.)
-3. For local testing without real email delivery, use the **Inbucket** mailbox
-   in `supabase start`, or read the code from **Authentication → Logs**. In
+   `{{ .ConfirmationURL }}` is the link the user clicks.
+3. **Authentication → URL Configuration → Redirect URLs**: add every app origin
+   the link may return to, e.g. `http://localhost:5174` and your production URL.
+   The app passes `window.location.origin` as the redirect target, so the origin
+   must be on this allow-list.
+4. For local testing without real email delivery, use the **Inbucket** mailbox
+   in `supabase start`, or open the link from **Authentication → Logs**. In
    production, configure SMTP under **Project Settings → Auth → SMTP**.
 
-> No Google Cloud Console, OAuth client, or redirect URI configuration is
+> No Google Cloud Console, OAuth client, or OAuth redirect URI configuration is
 > required.
 
 ## 5. Run
@@ -78,8 +80,8 @@ npm install
 npm run dev
 ```
 
-Click **Sign in** in the top-right user menu, enter your email, then the code
-from the email.
+Click **Sign in** in the top-right user menu, enter your email, then click the
+confirmation link in the email.
 
 ---
 

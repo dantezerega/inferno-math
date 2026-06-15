@@ -198,39 +198,23 @@ export function UserMenu() {
   );
 }
 
-/** Two-step email → one-time-code sign-in form. */
+/** Email magic-link sign-in: enter email, we send a confirmation link. */
 function SignInForm({ onDone }: { onDone: () => void }) {
-  const sendOtp = useAuth((s) => s.sendOtp);
-  const verifyEmailOtp = useAuth((s) => s.verifyEmailOtp);
+  const sendMagicLink = useAuth((s) => s.sendMagicLink);
 
-  const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-  const submitEmail = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validEmail || busy) return;
     setBusy(true);
-    const ok = await sendOtp(email.trim());
+    const ok = await sendMagicLink(email.trim());
     setBusy(false);
-    if (ok) setStep('code');
-  };
-
-  const submitCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.trim().length < 6 || busy) return;
-    setBusy(true);
-    const ok = await verifyEmailOtp(email.trim(), code);
-    setBusy(false);
-    if (ok) {
-      setCode('');
-      setEmail('');
-      setStep('email');
-      onDone();
-    }
+    if (ok) setSent(true);
   };
 
   const inputClass =
@@ -238,64 +222,50 @@ function SignInForm({ onDone }: { onDone: () => void }) {
   const btnClass =
     'flex w-full items-center justify-center gap-2 rounded-xl bg-flame py-2 text-sm font-semibold text-white shadow-glow transition disabled:opacity-50';
 
-  if (step === 'email') {
+  if (sent) {
     return (
-      <form onSubmit={submitEmail} className="space-y-3">
-        <div>
-          <div className="mb-1 text-sm font-semibold text-content">Sign in</div>
-          <p className="text-xs text-muted">
-            Enter your email and we'll send a one-time login code.
-          </p>
+      <div className="space-y-3 text-center">
+        <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-accent">
+          <Mail size={18} aria-hidden />
         </div>
-        <input
-          type="email"
-          autoFocus
-          inputMode="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-        />
-        <button type="submit" disabled={!validEmail || busy} className={btnClass}>
-          <Mail size={15} aria-hidden />
-          {busy ? 'Sending…' : 'Send code'}
+        <div className="text-sm font-semibold text-content">Check your email</div>
+        <p className="text-xs text-muted">
+          We sent a confirmation link to{' '}
+          <span className="text-content">{email}</span>. Click it to finish
+          signing in.
+        </p>
+        <button
+          type="button"
+          onClick={onDone}
+          className="w-full rounded-xl border border-border bg-surface-2/60 py-2 text-sm font-semibold text-content transition-colors hover:bg-surface-2"
+        >
+          Done
         </button>
-      </form>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={submitCode} className="space-y-3">
+    <form onSubmit={submit} className="space-y-3">
       <div>
-        <div className="mb-1 text-sm font-semibold text-content">Enter code</div>
+        <div className="mb-1 text-sm font-semibold text-content">Sign in</div>
         <p className="text-xs text-muted">
-          We sent a code to <span className="text-content">{email}</span>.
+          Enter your email and we'll send a link to confirm.
         </p>
       </div>
       <input
-        type="text"
+        type="email"
         autoFocus
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        placeholder="123456"
-        maxLength={6}
-        value={code}
-        onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-        className={`${inputClass} text-center font-mono text-lg tracking-[0.4em]`}
+        inputMode="email"
+        autoComplete="email"
+        placeholder="you@example.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className={inputClass}
       />
-      <button type="submit" disabled={code.trim().length < 6 || busy} className={btnClass}>
-        {busy ? 'Verifying…' : 'Verify & sign in'}
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setStep('email');
-          setCode('');
-        }}
-        className="w-full text-center text-xs text-muted hover:text-content"
-      >
-        Use a different email
+      <button type="submit" disabled={!validEmail || busy} className={btnClass}>
+        <Mail size={15} aria-hidden />
+        {busy ? 'Sending…' : 'Send link'}
       </button>
     </form>
   );
