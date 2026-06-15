@@ -5,10 +5,14 @@ import { CalendarDays, Flame, X } from 'lucide-react';
 import { useGame } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { useStats } from '@/store/statsStore';
+import { useAuth } from '@/store/authStore';
 import { useCountdown } from '@/hooks/useCountdown';
 import { playSound } from '@/utils/sound';
 import { accuracy, isCorrect, isStreakMilestone } from '@/game/scoring';
 import { adjustDifficulty, DIFFICULTY_LABEL } from '@/game/difficulty';
+import { achievementById } from '@/game/achievements';
+import { persistSession } from '@/services/cloudSync';
+import { notify } from '@/store/notificationStore';
 import { formatClock } from '@/utils/date';
 import { cn } from '@/utils/cn';
 
@@ -60,6 +64,21 @@ export default function Game() {
           accuracy(result.correct, result.incorrect),
         );
         if (next !== settings.difficulty) settings.setDifficulty(next);
+      }
+
+      // Cloud sync (fire-and-forget) when signed in. Never blocks navigation;
+      // failures surface as toasts and the local save above still stands.
+      const { user, isAuthenticated, refreshSummary } = useAuth.getState();
+      if (isAuthenticated && user) {
+        const difficulty =
+          useGame.getState().config?.difficulty ?? settings.difficulty;
+        void persistSession(user.id, result, difficulty).then((updated) => {
+          void refreshSummary();
+          for (const id of updated?.newlyEarnedAchievements ?? []) {
+            const a = achievementById(id);
+            if (a) notify.success(`Achievement unlocked: ${a.name}`);
+          }
+        });
       }
     }
     navigate('/results', { state: { newBest } });

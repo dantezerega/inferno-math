@@ -5,6 +5,7 @@ import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { UserMenu } from '@/components/UserMenu';
 import { useGame } from '@/store/gameStore';
 import { useSettings } from '@/store/settingsStore';
 import { useStats } from '@/store/statsStore';
@@ -44,9 +45,12 @@ export default function Home() {
 
   return (
     <PageShell className="justify-center">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between gap-3">
         <Logo />
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </div>
 
       <motion.div
