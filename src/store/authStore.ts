@@ -29,12 +29,10 @@ interface AuthState {
   summary: UserSummary | null;
 
   initialize: () => void;
-  /**
-   * Email a magic sign-in link to the given address. Returns true once the
-   * email is sent; the user completes sign-in by clicking the link, which
-   * redirects back and establishes the session automatically.
-   */
-  sendMagicLink: (email: string) => Promise<boolean>;
+  /** Send a one-time login code to the given email. Returns true on success. */
+  sendOtp: (email: string) => Promise<boolean>;
+  /** Verify the emailed code; on success a session is established. */
+  verifyEmailOtp: (email: string, token: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   refreshSummary: () => Promise<void>;
 }
@@ -88,7 +86,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     unsubscribe = () => data.subscription.unsubscribe();
   },
 
-  sendMagicLink: async (email) => {
+  sendOtp: async (email) => {
     if (!isSupabaseConfigured || !supabase) {
       notify.error('Sign-in is unavailable: cloud sync is not configured.');
       return false;
@@ -96,20 +94,36 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          // Create the account automatically on first login.
-          shouldCreateUser: true,
-          // Return the user to the app after clicking the link; the client's
-          // detectSessionInUrl then establishes the session.
-          emailRedirectTo: window.location.origin,
-        },
+        // Create the account automatically on first login.
+        options: { shouldCreateUser: true },
       });
       if (error) throw error;
-      notify.success(`We sent a confirmation link to ${email}.`);
+      notify.success(`We sent a login code to ${email}.`);
       return true;
     } catch (err) {
-      console.error('sendMagicLink failed', err);
-      notify.error('Could not send the link. Check the email and retry.');
+      console.error('sendOtp failed', err);
+      notify.error('Could not send the login code. Check the email and retry.');
+      return false;
+    }
+  },
+
+  verifyEmailOtp: async (email, token) => {
+    if (!isSupabaseConfigured || !supabase) {
+      notify.error('Sign-in is unavailable: cloud sync is not configured.');
+      return false;
+    }
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: token.trim(),
+        type: 'email',
+      });
+      if (error) throw error;
+      // Session is set via the onAuthStateChange listener.
+      return true;
+    } catch (err) {
+      console.error('verifyEmailOtp failed', err);
+      notify.error('Invalid or expired code. Please try again.');
       return false;
     }
   },
