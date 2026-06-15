@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light theme — warm paper tones with a flame accent */
+  --surface: 253 248 244;
+  --surface-2: 255 255 255;
+  --elevated: 255 255 255;
+  --border: 237 224 213;
+  --content: 31 20 14;
+  --muted: 146 124 110;
+  --accent: 234 88 12;
+  --accent-soft: 255 231 209;
+  --flame-2: 220 38 38;
+  --success: 22 163 74;
+  --danger: 220 38 38;
+}
+
+.dark {
+  /* Dark theme — charcoal embers with a flame accent */
+  --surface: 17 12 11;
+  --surface-2: 26 18 16;
+  --elevated: 34 24 21;
+  --border: 58 39 33;
+  --content: 248 240 233;
+  --muted: 168 145 132;
+  --accent: 234 88 12;
+  --accent-soft: 69 30 14;
+  --flame-2: 220 38 38;
+  --success: 52 211 153;
+  --danger: 248 113 113;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: rgb(var(--surface));
+  color: rgb(var(--content));
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Smooth color transitions across theme switch */
+.theme-transition,
+.theme-transition * {
+  transition: background-color 0.4s ease, border-color 0.4s ease,
+    color 0.4s ease, fill 0.4s ease;
+}
+
+/* Hide number-input spinners */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+::selection {
+  background: rgb(var(--accent) / 0.3);
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 8px;
+}
+
+@layer components {
+  .glass {
+    background: rgb(var(--elevated) / 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgb(var(--border) / 0.8);
+  }
+}
